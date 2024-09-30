@@ -39,7 +39,9 @@
 | **RANDOM_SESSION_START_DELAY** |                                                                                        Random delay at session start from 1 to set value (e.g. **30**)                                                                                        |
 | **SESSIONS_PER_PROXY**         |                                                                                            Amount of sessions, that can share same proxy ( **1** )                                                                                            |
 | **USE_PROXY_FROM_FILE**        |                                                                               Whether to use a proxy from the `bot/config/proxies.txt` file (**True** / False)                                                                                |
+| **DISABLE_PROXY_REPLACE**      |                                                                      Disable automatic checking and replacement of non-working proxies before startup (True / **False**)                                                                      |
 | **DEVICE_PARAMS**              |                                                                          Enter device settings to make the telegram session look more realistic  (True / **False**)                                                                           |
+| **DEBUG_LOGGING**              |                                                                                     Whether to log error's tracebacks to /logs folder (True / **False**)                                                                                      |
 
 
 ## Quick Start 📚

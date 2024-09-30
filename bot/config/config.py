@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     SESSIONS_PER_PROXY: int = 1
     USE_PROXY_FROM_FILE: bool = True
+    DISABLE_PROXY_REPLACE: bool = False
     USE_PROXY_CHAIN: bool = False
 
     DEVICE_PARAMS: bool = False

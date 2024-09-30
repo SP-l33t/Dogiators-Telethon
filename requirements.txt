@@ -1,0 +1,13 @@
+aiohttp==3.9.5
+aiohttp-proxy==0.1.2
+aiocfscrape==1.0.0
+asyncio==3.4.3
+loguru~=0.7.2
+Telethon==1.36.0
+better-proxy==1.2.0
+pydantic-settings==2.4.0
+python-socks==2.5.1
+pytz==2024.2
+PySocks==1.7.1
+fasteners
+python-dateutil==2.9.0

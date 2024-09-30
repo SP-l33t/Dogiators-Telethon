@@ -6,6 +6,8 @@
 
 # 🔥🔥 Use PYTHON 3.10 🔥🔥
 
+> 🇷 🇺 README in russian available [here](README-RU.md)
+
 ## Features  
 | Feature                       | Supported |
 |-------------------------------|:---------:|
@@ -57,7 +59,7 @@ Before you begin, make sure you have the following installed:
 You can download [**Repository**](https://github.com/SP-l33t/Dogiators-Telethon) by cloning it onto your system and installing the necessary dependencies:
 ```shell
 git clone https://github.com/SP-l33t/Dogiators-Telethon.git
-cd MajorBot
+cd Dogiators-Telethon
 ```
 
 # Linux manual installation

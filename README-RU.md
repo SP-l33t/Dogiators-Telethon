@@ -57,7 +57,7 @@
 Вы можете скачать [**Репозиторий**](https://github.com/SP-l33t/Dogiators-Telethon) клонированием на вашу систему и установкой необходимых зависимостей:
 ```shell
 git clone https://github.com/SP-l33t/Dogiators-Telethon.git
-cd MajorBot
+cd Dogiators-Telethon
 ```
 
 Затем для автоматической установки введите:

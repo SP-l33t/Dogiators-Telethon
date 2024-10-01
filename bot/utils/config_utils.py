@@ -1,6 +1,5 @@
 import json
-from bot.utils import logger, log_error
-from fasteners import InterProcessLock
+from bot.utils import logger, log_error, AsyncInterProcessLock
 from os import path
 
 
@@ -24,7 +23,7 @@ def read_config_file(config_path: str) -> dict:
     return config
 
 
-def write_config_file(content: dict, config_path: str):
+async def write_config_file(content: dict, config_path: str):
     """Writes the contents of a config file. If the file does not exist, creates it.
 
      Args:
@@ -34,9 +33,9 @@ def write_config_file(content: dict, config_path: str):
      Returns:
        The contents of the file, or an empty dict if the file was empty or created.
      """
-    lock = InterProcessLock(path.join(path.dirname(config_path), 'lock_files', 'accounts_config.lock'))
+    lock = AsyncInterProcessLock(path.join(path.dirname(config_path), 'lock_files', 'accounts_config.lock'))
     try:
-        with lock:
+        async with lock:
             with open(config_path, 'w+') as f:
                 json.dump(content, f, indent=2)
     except IOError as e:
@@ -56,8 +55,7 @@ def get_session_config(session_name: str, config_path: str) -> dict:
     return read_config_file(config_path).get(session_name, {})
 
 
-def update_session_config_in_file(session_name: str, updated_session_config: dict,
-                                  config_path: str):
+async def update_session_config_in_file(session_name: str, updated_session_config: dict, config_path: str):
     """Updates the content of a session in config file. If the file does not exist, creates it.
 
      Args:
@@ -71,6 +69,6 @@ def update_session_config_in_file(session_name: str, updated_session_config: dic
     try:
         config = read_config_file(config_path)
         config[session_name] = updated_session_config
-        write_config_file(config, config_path)
+        await write_config_file(config, config_path)
     except Exception as e:
         log_error(e)

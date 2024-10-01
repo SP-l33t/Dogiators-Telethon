@@ -77,7 +77,7 @@ async def get_tg_clients() -> list[TelegramClient]:
                                        'api_id': client_params['api_id'],
                                        'api_hash': client_params['api_hash']})
                 accounts_config[session_name] = session_config
-                config_utils.update_session_config_in_file(session_name, session_config, CONFIG_PATH)
+                await config_utils.update_session_config_in_file(session_name, session_config, CONFIG_PATH)
                 continue
 
     return tg_clients

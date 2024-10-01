@@ -74,7 +74,7 @@ async def register_sessions() -> None:
     user_data = await session.get_me()
 
     if user_data:
-        config_utils.write_config_file(accounts_config, CONFIG_PATH)
+        await config_utils.write_config_file(accounts_config, CONFIG_PATH)
         logger.success(
             f'Session added successfully @{user_data.username} | {user_data.first_name} {user_data.last_name}'
         )

@@ -6,6 +6,7 @@ import os
 from telethon import TelegramClient
 
 from bot.config import settings
+from bot.core.agents import generate_random_user_agent
 from bot.utils import logger, config_utils, proxy_utils, CONFIG_PATH, SESSIONS_PATH, PROXIES_PATH
 from bot.core.tapper import run_tapper
 from bot.core.registrator import register_sessions
@@ -36,7 +37,6 @@ def get_session_names(sessions_folder: str) -> list[str]:
 
 
 async def get_tg_clients() -> list[TelegramClient]:
-    accounts_config = config_utils.read_config_file(CONFIG_PATH)
     session_names = get_session_names(SESSIONS_PATH)
 
     if not session_names:
@@ -44,7 +44,8 @@ async def get_tg_clients() -> list[TelegramClient]:
 
     tg_clients = []
     for session_name in session_names:
-        session_config: dict = accounts_config.get(session_name, {})
+        accounts_config = config_utils.read_config_file(CONFIG_PATH)
+        session_config: dict = accounts_config.get(session_name, {}).copy()
         client_params = {
             "api_id": session_config.get("api_id", API_ID),
             "api_hash": session_config.get("api_hash", API_HASH),
@@ -75,10 +76,10 @@ async def get_tg_clients() -> list[TelegramClient]:
                 tg_clients.append(TelegramClient(**client_params))
                 session_config.update({'proxy': proxy,
                                        'api_id': client_params['api_id'],
-                                       'api_hash': client_params['api_hash']})
-                accounts_config[session_name] = session_config
-                await config_utils.update_session_config_in_file(session_name, session_config, CONFIG_PATH)
-                continue
+                                       'api_hash': client_params['api_hash'],
+                                       'user_agent': session_config.get('user_agent', generate_random_user_agent())})
+                if accounts_config.get(session_name) != session_config:
+                    await config_utils.update_session_config_in_file(session_name, session_config, CONFIG_PATH)
 
     return tg_clients
 

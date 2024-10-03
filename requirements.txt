@@ -11,3 +11,4 @@ pytz==2024.2
 PySocks==1.7.1
 fasteners
 python-dateutil==2.9.0
+ua_generator

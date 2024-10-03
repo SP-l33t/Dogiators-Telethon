@@ -7,13 +7,11 @@ headers = {
     'priority': 'u=1, i',
     'origin': 'https://tte.dogiators.com',
     'referer': 'https://tte.dogiators.com/',
-    'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
     'sec-ch-ua-mobile': '?1',
     'sec-ch-ua-platform': '"Android"',
     'sec-fetch-dest': 'empty',
     'sec-fetch-mode': 'cors',
     'sec-fetch-site': 'same-origin',
-    'user-agent': 'Mozilla/5.0 (Linux; Android 7.1.2; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Mobile Safari/537.36',
     'x-requested-with': 'org.telegram.messenger'
 }
 

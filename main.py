@@ -17,6 +17,7 @@ async def main():
                 socket.socket = socks.socksocket
             else:
                 logger.error("Proxy chain didn't respond. Can't start the bot using proxy chain")
+                input('Press any key to exit: ')
                 exit(0)
         else:
             logger.warning("No valid proxy found. Skipping")

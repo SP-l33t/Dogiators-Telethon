@@ -1,3 +1,4 @@
+import asyncio
 import json
 from bot.utils import logger, log_error, AsyncInterProcessLock
 from os import path
@@ -19,7 +20,7 @@ def read_config_file(config_path: str) -> dict:
     except FileNotFoundError:
         config = {}
         with open(config_path, 'w'):
-            print(f"Accounts config file `{config_path}` not found. Creating a new one.")
+            logger.warning(f"Accounts config file `{config_path}` not found. Creating a new one.")
     return config
 
 
@@ -38,6 +39,7 @@ async def write_config_file(content: dict, config_path: str):
         async with lock:
             with open(config_path, 'w+') as f:
                 json.dump(content, f, indent=2)
+            await asyncio.sleep(0.1)
     except IOError as e:
         logger.error(f"An error occurred while writing to {config_path}: {e}")
 

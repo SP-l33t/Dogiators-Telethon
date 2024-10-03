@@ -21,11 +21,12 @@ async def register_sessions() -> None:
     device_params = {}
 
     if settings.DEVICE_PARAMS:
-        print("""Sample Device values:
+        logger.info("""
+        Sample Device values (Don't use quotes):
         ### Attributes:
-            device_model (`str`)     : `"Samsung SM-G998B"`
-            system_version (`str`)   : `"SDK 31"`
-            app_version (`str`)      : `"8.4.1 (2522)"`
+            device_model (`str`)     : `Samsung SM-G998B`
+            system_version (`str`)   : `SDK 31`
+            app_version (`str`)      : `8.4.1 (2522)`
         """)
         device_params.update(
             {

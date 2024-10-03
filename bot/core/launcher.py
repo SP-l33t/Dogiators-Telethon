@@ -58,9 +58,15 @@ async def get_tg_clients() -> list[TelegramClient]:
             if key in session_config and session_config[key]:
                 client_params[key] = session_config[key]
 
+        session_config.update({'api_id': client_params['api_id'],
+                               'api_hash': client_params['api_hash'],
+                               'user_agent': session_config.get('user_agent', generate_random_user_agent())})
+
         session_proxy = session_config.get('proxy')
         if not session_proxy and 'proxy' in session_config.keys():
             tg_clients.append(TelegramClient(**client_params))
+            if accounts_config.get(session_name) != session_config:
+                await config_utils.update_session_config_in_file(session_name, session_config, CONFIG_PATH)
             continue
 
         else:
@@ -74,10 +80,7 @@ async def get_tg_clients() -> list[TelegramClient]:
                 continue
             else:
                 tg_clients.append(TelegramClient(**client_params))
-                session_config.update({'proxy': proxy,
-                                       'api_id': client_params['api_id'],
-                                       'api_hash': client_params['api_hash'],
-                                       'user_agent': session_config.get('user_agent', generate_random_user_agent())})
+                session_config['proxy'] = proxy
                 if accounts_config.get(session_name) != session_config:
                     await config_utils.update_session_config_in_file(session_name, session_config, CONFIG_PATH)
 

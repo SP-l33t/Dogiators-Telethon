@@ -3,7 +3,8 @@ import asyncio
 import argparse
 import os
 
-from telethon import TelegramClient
+from opentele.api import API
+from opentele.tl import TelegramClient
 
 from bot.config import settings
 from bot.core.agents import generate_random_user_agent

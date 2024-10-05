@@ -9,7 +9,7 @@ from better_proxy import Proxy
 from datetime import datetime, timedelta
 from time import time
 
-from telethon import TelegramClient
+from opentele.tl import TelegramClient
 from telethon.errors import *
 from telethon.types import InputBotAppShortName, InputNotifyPeer, InputPeerNotifySettings, InputUser
 from telethon.functions import messages, account, channels

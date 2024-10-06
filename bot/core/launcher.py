@@ -2,6 +2,7 @@ import glob
 import asyncio
 import argparse
 import os
+from copy import deepcopy
 
 from opentele.api import API
 from opentele.tl import TelegramClient
@@ -11,7 +12,6 @@ from bot.core.agents import generate_random_user_agent
 from bot.utils import logger, config_utils, proxy_utils, CONFIG_PATH, SESSIONS_PATH, PROXIES_PATH
 from bot.core.tapper import run_tapper
 from bot.core.registrator import register_sessions
-
 
 START_TEXT = """
 
@@ -46,22 +46,27 @@ async def get_tg_clients() -> list[TelegramClient]:
     tg_clients = []
     for session_name in session_names:
         accounts_config = config_utils.read_config_file(CONFIG_PATH)
-        session_config: dict = accounts_config.get(session_name, {}).copy()
+        session_config: dict = deepcopy(accounts_config.get(session_name, {}))
+        if 'api' not in session_config:
+            session_config['api'] = {}
+        api_config = session_config.get('api', {})
+
         client_params = {
-            "api_id": session_config.get("api_id", API_ID),
-            "api_hash": session_config.get("api_hash", API_HASH),
-            "lang_code": "en",
+            "api_id": api_config.get("api_id", API_ID),
+            "api_hash": api_config.get("api_hash", API_HASH),
             "session": os.path.join(SESSIONS_PATH, session_name),
-            "system_lang_code": "en-US"
+            "lang_code": api_config.get("lang_code", "en"),
+            "system_lang_code": api_config.get("system_lang_code", "en-US")
         }
 
         for key in ("device_model", "system_version", "app_version"):
-            if key in session_config and session_config[key]:
-                client_params[key] = session_config[key]
+            if key in api_config and api_config[key]:
+                client_params[key] = api_config[key]
 
-        session_config.update({'api_id': client_params['api_id'],
-                               'api_hash': client_params['api_hash'],
-                               'user_agent': session_config.get('user_agent', generate_random_user_agent())})
+        session_config['user_agent'] = session_config.get('user_agent', generate_random_user_agent())
+        api_config.update({
+            'api_id': client_params['api_id'],
+            'api_hash': client_params['api_hash']})
 
         session_proxy = session_config.get('proxy')
         if not session_proxy and 'proxy' in session_config.keys():
@@ -74,7 +79,8 @@ async def get_tg_clients() -> list[TelegramClient]:
             if settings.DISABLE_PROXY_REPLACE:
                 proxy = session_proxy or next(iter(proxy_utils.get_unused_proxies(accounts_config, PROXIES_PATH)), "")
             else:
-                proxy = await proxy_utils.get_working_proxy(accounts_config, session_proxy) if session_proxy or settings.USE_PROXY_FROM_FILE else None
+                proxy = await proxy_utils.get_working_proxy(accounts_config,
+                                                            session_proxy) if session_proxy or settings.USE_PROXY_FROM_FILE else None
 
             if not proxy and (settings.USE_PROXY_FROM_FILE or session_proxy):
                 logger.warning(f"{session_name} | Didn't find a working unused proxy for session | Skipping")
@@ -119,6 +125,7 @@ async def process() -> None:
 
 
 async def run_tasks():
+    await config_utils.restructure_config(CONFIG_PATH)
     tg_clients = await get_tg_clients()
-    tasks = [asyncio.create_task(run_tapper(tg_client=tg_client))for tg_client in tg_clients]
+    tasks = [asyncio.create_task(run_tapper(tg_client=tg_client)) for tg_client in tg_clients]
     await asyncio.gather(*tasks)

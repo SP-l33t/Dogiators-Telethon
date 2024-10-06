@@ -2,6 +2,7 @@ import asyncio
 import json
 from bot.utils import logger, log_error, AsyncInterProcessLock
 from os import path
+from copy import deepcopy
 
 
 def read_config_file(config_path: str) -> dict:
@@ -74,3 +75,24 @@ async def update_session_config_in_file(session_name: str, updated_session_confi
         await write_config_file(config, config_path)
     except Exception as e:
         log_error(e)
+
+
+async def restructure_config(config_path: str):
+    config = read_config_file(config_path)
+    if config:
+        cfg_copy = deepcopy(config)
+        for key, value in cfg_copy.items():
+            api_info = {
+                "api_id": value.get('api', {}).get("api_id") or value.pop("api_id", None),
+                "api_hash": value.get('api', {}).get("api_hash") or value.pop("api_hash", None),
+                "device_model": value.get('api', {}).get("device_model") or value.pop("device_model", None),
+                "system_version": value.get('api', {}).get("system_version") or value.pop("system_version", None),
+                "app_version": value.get('api', {}).get("app_version") or value.pop("app_version", None),
+                "system_lang_code": value.get('api', {}).get("system_lang_code") or value.pop("system_lang_code", None),
+                "lang_pack": value.get('api', {}).get("lang_pack") or value.pop("lang_pack", None),
+                "lang_code": value.get('api', {}).get("lang_code") or value.pop("lang_code", None)
+            }
+            api_info = {k: v for k, v in api_info.items() if v is not None}
+            cfg_copy[key]['api'] = api_info
+        if cfg_copy != config:
+            await write_config_file(cfg_copy, config_path)

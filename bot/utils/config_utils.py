@@ -1,8 +1,16 @@
 import asyncio
 import json
 from bot.utils import logger, log_error, AsyncInterProcessLock
-from os import path
+from os import path, remove
 from copy import deepcopy
+
+LANG_PACK = {
+    '6': "android",
+    '4': "android",
+    '21724': "android",
+    '10840': 'ios',
+    '2040': 'tdesktop'
+}
 
 
 def read_config_file(config_path: str) -> dict:
@@ -96,3 +104,24 @@ async def restructure_config(config_path: str):
             cfg_copy[key]['api'] = api_info
         if cfg_copy != config:
             await write_config_file(cfg_copy, config_path)
+
+
+def import_session_json(session_path: str):
+    json_path = f"{session_path.replace('.session', '')}.json"
+    if path.isfile(json_path):
+        with open(json_path, 'r') as file:
+            json_conf = json.loads(file.read())
+        api = {
+            'api_id': json_conf.get('app_id'),
+            'api_hash': json_conf.get('app_hash'),
+            'device_model': json_conf.get('device'),
+            'system_version': json_conf.get('sdk'),
+            'app_version': json_conf.get('app_version'),
+            'system_lang_code': json_conf.get('system_lang_code'),
+            'lang_code': json_conf.get('lang_code'),
+            'lang_pack': json_conf.get('lang_pack', LANG_PACK[f"{json_conf.get('app_id')}"])
+        }
+        remove(json_path)
+        return api
+
+    return None

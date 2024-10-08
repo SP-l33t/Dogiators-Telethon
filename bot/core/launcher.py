@@ -5,6 +5,7 @@ import os
 from copy import deepcopy
 
 from opentele.tl import TelegramClient
+from telethon.network import ConnectionTcpAbridged
 
 from bot.config import settings
 from bot.core.agents import generate_random_user_agent
@@ -79,6 +80,9 @@ async def get_tg_clients() -> list[TelegramClient]:
         if 'api' not in session_config:
             session_config['api'] = {}
         api_config = session_config.get('api', {})
+        api = None
+        if api_config.get('api_id') in [4, 6, 2040, 10840, 21724]:
+            api = config_utils.get_api(api_config)
 
         client_params = {
             "api_id": api_config.get("api_id", API_ID),
@@ -99,14 +103,17 @@ async def get_tg_clients() -> list[TelegramClient]:
 
         session_proxy = session_config.get('proxy')
         if not session_proxy and 'proxy' in session_config.keys():
-            tg_clients.append(TelegramClient(**client_params))
+            if not api:
+                tg_clients.append(TelegramClient(connection=ConnectionTcpAbridged, **client_params))
+            else:
+                tg_clients.append(TelegramClient(connection=ConnectionTcpAbridged, session=client_params['session'], api=api))
             if accounts_config.get(session_name) != session_config:
                 await config_utils.update_session_config_in_file(session_name, session_config, CONFIG_PATH)
             continue
 
         else:
             if settings.DISABLE_PROXY_REPLACE:
-                proxy = session_proxy or next(iter(proxy_utils.get_unused_proxies(accounts_config, PROXIES_PATH)), "")
+                proxy = session_proxy or next(iter(proxy_utils.get_unused_proxies(accounts_config, PROXIES_PATH)), None)
             else:
                 proxy = await proxy_utils.get_working_proxy(accounts_config, session_proxy) if session_proxy or settings.USE_PROXY_FROM_FILE else None
 
@@ -114,7 +121,10 @@ async def get_tg_clients() -> list[TelegramClient]:
                 logger.warning(f"{session_name} | Didn't find a working unused proxy for session | Skipping")
                 continue
             else:
-                tg_clients.append(TelegramClient(**client_params))
+                if not api:
+                    tg_clients.append(TelegramClient(connection=ConnectionTcpAbridged, **client_params))
+                else:
+                    tg_clients.append(TelegramClient(connection=ConnectionTcpAbridged, session=client_params['session'], api=api))
                 session_config['proxy'] = proxy
                 if accounts_config.get(session_name) != session_config:
                     await config_utils.update_session_config_in_file(session_name, session_config, CONFIG_PATH)

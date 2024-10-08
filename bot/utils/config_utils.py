@@ -1,16 +1,9 @@
 import asyncio
 import json
 from bot.utils import logger, log_error, AsyncInterProcessLock
+from opentele.api import API
 from os import path, remove
 from copy import deepcopy
-
-LANG_PACK = {
-    '6': "android",
-    '4': "android",
-    '21724': "android",
-    '10840': 'ios',
-    '2040': 'tdesktop'
-}
 
 
 def read_config_file(config_path: str) -> dict:
@@ -107,21 +100,51 @@ async def restructure_config(config_path: str):
 
 
 def import_session_json(session_path: str):
+    lang_pack = {
+        6: "android",
+        4: "android",
+        2040: 'tdesktop',
+        10840: 'ios',
+        21724: "android",
+    }
     json_path = f"{session_path.replace('.session', '')}.json"
     if path.isfile(json_path):
         with open(json_path, 'r') as file:
             json_conf = json.loads(file.read())
         api = {
-            'api_id': json_conf.get('app_id'),
+            'api_id': int(json_conf.get('app_id')),
             'api_hash': json_conf.get('app_hash'),
             'device_model': json_conf.get('device'),
             'system_version': json_conf.get('sdk'),
             'app_version': json_conf.get('app_version'),
             'system_lang_code': json_conf.get('system_lang_code'),
             'lang_code': json_conf.get('lang_code'),
-            'lang_pack': json_conf.get('lang_pack', LANG_PACK[f"{json_conf.get('app_id')}"])
+            'lang_pack': json_conf.get('lang_pack', lang_pack[int(json_conf.get('app_id'))])
         }
         remove(json_path)
         return api
 
     return None
+
+
+def get_api(acc_api):
+    api_generators = {
+        4: API.TelegramAndroid.Generate,
+        6: API.TelegramAndroid.Generate,
+        2040: API.TelegramDesktop.Generate,
+        10840: API.TelegramIOS.Generate,
+        21724: API.TelegramAndroidX.Generate
+    }
+
+    generate_api = api_generators.get(acc_api.get('api_id'), API.TelegramDesktop.Generate)
+    api = generate_api()
+
+    api.api_id = acc_api.get('api_id', api.api_id)
+    api.api_hash = acc_api.get('api_hash', api.api_hash)
+    api.device_model = acc_api.get('device_model', api.device_model)
+    api.system_version = acc_api.get('system_version', api.system_version)
+    api.app_version = acc_api.get('app_version', api.app_version)
+    api.system_lang_code = acc_api.get('system_lang_code', api.system_lang_code)
+    api.lang_code = acc_api.get('lang_code', api.lang_code)
+    api.lang_pack = acc_api.get('lang_pack', api.lang_pack)
+    return api

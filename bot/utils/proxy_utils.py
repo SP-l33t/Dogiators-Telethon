@@ -57,7 +57,7 @@ def get_proxies(proxy_path: str) -> list[str]:
 
 
 def get_unused_proxies(accounts_config, proxy_path: str):
-    proxies_count = Counter([v['proxy'] for v in accounts_config.values()])
+    proxies_count = Counter([v.get('proxy') for v in accounts_config.values() if v.get('proxy')])
     all_proxies = get_proxies(proxy_path)
     return [proxy for proxy in all_proxies if proxies_count.get(proxy, 0) < settings.SESSIONS_PER_PROXY]
 

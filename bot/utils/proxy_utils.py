@@ -31,6 +31,16 @@ def to_telethon_proxy(proxy: Proxy):
     }
 
 
+def to_pyrogram_proxy(proxy: Proxy):
+    return {
+                'scheme': proxy.protocol if proxy.protocol != 'https' else 'http',
+                'hostname': proxy.host,
+                'port': proxy.port,
+                'username': proxy.login,
+                'password': proxy.password
+    }
+
+
 def get_proxies(proxy_path: str) -> list[str]:
     """Reads proxies from the proxy file and returns array of proxies.
     If file doesn't exist, creates the file

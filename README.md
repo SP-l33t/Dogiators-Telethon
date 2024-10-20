@@ -9,39 +9,45 @@
 > 🇷 🇺 README in russian available [here](README-RU.md)
 
 ## Features  
-| Feature                       | Supported |
-|-------------------------------|:---------:|
-| Multithreading                |     ✅     |
-| Proxy binding to session      |     ✅     |
-| Using your referral link      |     ✅     |
-| Auto-farming                  |     ✅     |
-| Auto-tasks                    |     ✅     |
-| Auto-upgrade cards            |     ✅     |
-| Auto Roulette Spin            |     ✅     |
-| Auto daily check-ins          |     ✅     |
-| Support for telethon .session |     ✅     |
+|                 Feature                 | Supported |
+|:---------------------------------------:|:---------:|
+|             Multithreading              |     ✅     |
+|        Proxy binding to session         |     ✅     |
+|        Using your referral link         |     ✅     |
+|              Auto-farming               |     ✅     |
+|               Auto-tasks                |     ✅     |
+|           Auto-upgrade cards            |     ✅     |
+|           Auto Roulette Spin            |     ✅     |
+|          Auto daily check-ins           |     ✅     |
+| Supports telethon AND pyrogram .session |     ✅     |
+
+_Script searches for session files in the following folders:_
+* /sessions
+* /sessions/pyrogram
+* /session/telethon
 
 
 ## [Settings](https://github.com/SP-l33t/Dogiators-Telethon/tree/main/.env-example)
 
 # Use default setting for best performance !
-| Settings                       |                                                                                                                  Description                                                                                                                  |
-|--------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| **API_ID / API_HASH**          |                                                                                  Platform data from which to run the Telegram session (by default - android)                                                                                  |
-| **GLOBAL_CONFIG_PATH**         | Specifies the global path for accounts_config, proxies, sessions. <br/>Specify an absolute path or use an environment variable (default environment variable: **TG_FARM**) <br/>If no environment variable exists, uses the script directory. |
-| **REF_ID**                     |                                                                                         Your referral id (part of the referral link after startapp=)                                                                                          |
-| **PERFORM_QUESTS**             |                                                                                                   Auto complete quests ( **True** / False )                                                                                                   |
-| **CHANNEL_SUBSCRIBE_TASKS**    |                                                                                     whether to do tasks with a channel subscription ( **True** / False )                                                                                      |
-| **UPGRADE_CARDS**              |                                                                                                  Automatic card upgrade ( **True** / False)                                                                                                   |
-| **SPIN_THE_WHEEL**             |                                                                                   Automatic roulette spins when tickets are available ( **True** / False )                                                                                    |
-| **AUTO_TAP**                   |                                                                                                         Auto tap ( **True** / False )                                                                                                         |
-| **RANDOM_SLEEP_TIME**          |                                                                                                 Random sleep time interval ( [3600, 10800] )                                                                                                  |
+|            Settings            |                                                                                                                  Description                                                                                                                  |
+|:------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|     **API_ID / API_HASH**      |                                                                                  Platform data from which to run the Telegram session (by default - android)                                                                                  |
+|     **GLOBAL_CONFIG_PATH**     | Specifies the global path for accounts_config, proxies, sessions. <br/>Specify an absolute path or use an environment variable (default environment variable: **TG_FARM**) <br/>If no environment variable exists, uses the script directory. |
+|          **FIX_CERT**          |                                                                                           Try to fix  SSLCertVerificationError ( True / **False** )                                                                                           |
+|           **REF_ID**           |                                                                                         Your referral id (part of the referral link after startapp=)                                                                                          |
+|       **PERFORM_QUESTS**       |                                                                                                   Auto complete quests ( **True** / False )                                                                                                   |
+|  **CHANNEL_SUBSCRIBE_TASKS**   |                                                                                     whether to do tasks with a channel subscription ( **True** / False )                                                                                      |
+|       **UPGRADE_CARDS**        |                                                                                                  Automatic card upgrade ( **True** / False)                                                                                                   |
+|       **SPIN_THE_WHEEL**       |                                                                                   Automatic roulette spins when tickets are available ( **True** / False )                                                                                    |
+|          **AUTO_TAP**          |                                                                                                         Auto tap ( **True** / False )                                                                                                         |
+|     **RANDOM_SLEEP_TIME**      |                                                                                                 Random sleep time interval ( [3600, 10800] )                                                                                                  |
 | **RANDOM_SESSION_START_DELAY** |                                                                                        Random delay at session start from 1 to set value (e.g. **30**)                                                                                        |
-| **SESSIONS_PER_PROXY**         |                                                                                            Amount of sessions, that can share same proxy ( **1** )                                                                                            |
-| **USE_PROXY_FROM_FILE**        |                                                                               Whether to use a proxy from the `bot/config/proxies.txt` file (**True** / False)                                                                                |
-| **DISABLE_PROXY_REPLACE**      |                                                                      Disable automatic checking and replacement of non-working proxies before startup (True / **False**)                                                                      |
-| **DEVICE_PARAMS**              |                                                                          Enter device settings to make the telegram session look more realistic  (True / **False**)                                                                           |
-| **DEBUG_LOGGING**              |                                                                                     Whether to log error's tracebacks to /logs folder (True / **False**)                                                                                      |
+|     **SESSIONS_PER_PROXY**     |                                                                                            Amount of sessions, that can share same proxy ( **1** )                                                                                            |
+|    **USE_PROXY_FROM_FILE**     |                                                                               Whether to use a proxy from the `bot/config/proxies.txt` file (**True** / False)                                                                                |
+|   **DISABLE_PROXY_REPLACE**    |                                                                      Disable automatic checking and replacement of non-working proxies before startup (True / **False**)                                                                      |
+|       **DEVICE_PARAMS**        |                                                                          Enter device settings to make the telegram session look more realistic  (True / **False**)                                                                           |
+|       **DEBUG_LOGGING**        |                                                                                     Whether to log error's tracebacks to /logs folder (True / **False**)                                                                                      |
 
 
 ## Quick Start 📚

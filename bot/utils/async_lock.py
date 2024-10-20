@@ -19,7 +19,7 @@ class AsyncInterProcessLock:
             if lock_acquired:
                 return self
             sleep_time = uniform(30, 150)
-            logger_message = f"<LY><k> {self.file_name} </k></LY> | Failed to acquire lock for " \
+            logger_message = f"<LY><k>{self.file_name}</k></LY> | Failed to acquire lock for " \
                              f"{'accounts_config' if 'accounts_config' in self.file_name else 'session'}. " \
                              f"Retrying in {int(sleep_time)} seconds"
             logger.info(logger_message)

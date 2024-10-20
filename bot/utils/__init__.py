@@ -2,7 +2,7 @@ import os
 
 from .logger import logger, log_error
 from .async_lock import AsyncInterProcessLock
-from . import proxy_utils, config_utils
+from . import proxy_utils, config_utils, first_run
 from bot.config import settings
 
 
@@ -24,3 +24,7 @@ if settings.USE_PROXY_CHAIN:
 
 if not os.path.exists(path=SESSIONS_PATH):
     os.mkdir(path=SESSIONS_PATH)
+
+if settings.FIX_CERT:
+    from certifi import where
+    os.environ['SSL_CERT_FILE'] = where()

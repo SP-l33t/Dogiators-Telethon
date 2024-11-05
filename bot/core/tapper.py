@@ -1,12 +1,12 @@
 import aiohttp
 import asyncio
 import json
-import random
 from urllib.parse import unquote, quote, parse_qs
 from aiocfscrape import CloudflareScraper
 from aiohttp_proxy import ProxyConnector
 from better_proxy import Proxy
 from time import time
+from random import randint, uniform
 
 from bot.utils.universal_telegram_client import UniversalTelegramClient
 
@@ -41,6 +41,7 @@ class Tapper:
 
         self.user_data = None
         self.ref_code = None
+        self.referrals_count = 0
         self.tg_web_data = None
 
         self._webview_data = None
@@ -84,7 +85,7 @@ class Tapper:
             return "Europe/Berlin"
 
     async def get_quests(self, http_client: aiohttp.ClientSession):
-        await asyncio.sleep(random.uniform(1, 3))
+        await asyncio.sleep(uniform(1, 3))
         response = await http_client.get(url=f"{API_ENDPOINT}/quests/info?{self.tg_web_data}{self.ref_code}")
         if response.status == 200:
             quests_json = await response.json()
@@ -95,7 +96,7 @@ class Tapper:
             return None
 
     async def get_user_profile(self, http_client: aiohttp.ClientSession, time_zone: str):
-        await asyncio.sleep(random.uniform(1, 3))
+        await asyncio.sleep(uniform(1, 3))
         response = await http_client.post(f'{API_ENDPOINT}/profile/init?{self.tg_web_data}{self.ref_code}',
                                           json={"taps": 0, "profit": 0, "ts": 0, "timezone": time_zone})
         if response.status == 200:
@@ -107,17 +108,15 @@ class Tapper:
                 return None
 
     async def send_taps(self, http_client: aiohttp.ClientSession, profile: dict):
-        await asyncio.sleep(random.uniform(5, 10))
+        await asyncio.sleep(uniform(5, 10))
         curr_energy = profile.get('cur_energy', 0)
         profit_per_tap = profile.get('profit_per_tap', 10)
-        taps = int(curr_energy / profit_per_tap * random.uniform(0.75, 0.85))
-        profit = max(curr_energy - curr_energy % profit_per_tap - random.randint(1, 20) * 10, 0)
-        http_client.headers['content-type'] = "application/json"
+        taps = int(curr_energy / profit_per_tap * uniform(0.75, 0.85))
+        profit = max(curr_energy - curr_energy % profit_per_tap - randint(1, 20) * 10, 0)
         response = await http_client.patch(f"{API_ENDPOINT}/profile/update?{self.tg_web_data}{self.ref_code}",
                                            json={"taps": taps,
                                                  "profit": profit,
                                                  "timestamp": int(time())})
-        http_client.headers.pop('content-type', "")
         if response.status == 200:
             resp_json = await response.json()
             if resp_json.get('status', False):
@@ -128,7 +127,7 @@ class Tapper:
         return None
 
     async def spin_wheel_of_fortune(self, http_client: aiohttp.ClientSession):
-        await asyncio.sleep(random.uniform(2, 5))
+        await asyncio.sleep(uniform(2, 5))
         get_spin_prizes = await http_client.get(url=f"{API_ENDPOINT}/fortune/info?{self.tg_web_data}{self.ref_code}")
         if get_spin_prizes.status != 200:
             logger.error(self.log_message(F"Failed to spin the wheel. Code: {get_spin_prizes.status}"))
@@ -150,7 +149,7 @@ class Tapper:
         return
 
     async def perform_daily_checkin(self, http_client: aiohttp.ClientSession):
-        await asyncio.sleep(random.uniform(2, 5))
+        await asyncio.sleep(uniform(2, 5))
         daily_reward = await http_client.post(
             url=f"{API_ENDPOINT}/quests/daily-reward/claim?{self.tg_web_data}{self.ref_code}")
         if daily_reward.status == 200 and (await daily_reward.json()).get('status', False):
@@ -166,10 +165,10 @@ class Tapper:
         if quest.get('type', "") == "subscribe:telegram" and settings.CHANNEL_SUBSCRIBE_TASKS:
             if quest.get('link'):
                 await self.tg_client.join_and_mute_tg_channel(quest.get('link'))
-                await asyncio.sleep(random.uniform(15, 20))
+                await asyncio.sleep(uniform(15, 20))
         elif quest.get('type', "") == "subscribe:telegram" and not settings.CHANNEL_SUBSCRIBE_TASKS:
             return
-        await asyncio.sleep(random.uniform(2, 5))
+        await asyncio.sleep(uniform(2, 5))
         quest_reward = await http_client.post(
             url=f"{API_ENDPOINT}/quests/subscribe/claim?{self.tg_web_data}{self.ref_code}",
             json={"type": quest.get('type')})
@@ -183,10 +182,19 @@ class Tapper:
 
         return
 
+    async def complete_onboarding(self, http_client: aiohttp.ClientSession):
+        payload = {"is_onboarded": True}
+        response = await http_client.patch(f"{API_ENDPOINT}/profile/update?{self.tg_web_data}{self.ref_code}",
+                                           json=payload)
+        resp_json = {}
+        if response.status in range(200, 300):
+            resp_json = await response.json()
+        return resp_json.get('result', {}).get("profile", {}).get("is_onboarded", False)
+
     async def get_upgrades_list(self, http_client: aiohttp.ClientSession):
-        await asyncio.sleep(random.uniform(2, 5))
+        await asyncio.sleep(uniform(2, 5))
         response = await http_client.get(f"{API_ENDPOINT}/upgrade/list?{self.tg_web_data}{self.ref_code}")
-        if response.status == 200:
+        if response.status in range(200, 300):
             resp_json = await response.json()
             if resp_json.get('status', False):
                 return resp_json.get('result', {})
@@ -196,7 +204,7 @@ class Tapper:
             return {}
 
     async def upgrade_card(self, http_client: aiohttp.ClientSession, upgrade_id: int) -> bool:
-        await asyncio.sleep(random.uniform(1, 3))
+        await asyncio.sleep(uniform(1, 3))
         response = await http_client.post(f"{API_ENDPOINT}/upgrade/buy?{self.tg_web_data}{self.ref_code}",
                                           json={"upgrade_id": upgrade_id})
         if response.status == 200:
@@ -205,10 +213,11 @@ class Tapper:
                 return True
         return False
 
-    @staticmethod
-    async def select_best_upgrade(json_object, available_money):
-        upgrades = json_object['system_upgrades'] + json_object['special_upgrades']
-        profile_upgrades = json_object['profile_upgrades']
+    async def select_best_upgrade(self, json_object, available_money):
+        upgrades = json_object.get('system_upgrades', [{}]) + json_object.get('special_upgrades', [{}]) + \
+                   json_object.get('arena_upgrades', [{}])
+        arena_stats = json_object.get('arena_stats', {})
+        profile_upgrades = json_object.get('profile_upgrades', [{}])
 
         # Convert profile upgrades to a dictionary for easy lookup
         profile_upgrades_dict = {upgrade['upgrade_id']: upgrade['level'] for upgrade in profile_upgrades}
@@ -231,9 +240,35 @@ class Tapper:
 
             # Check requirements
             can_upgrade = True
-            for requirement in upgrade.get('requirements', []):
-                if (requirement['reach_upgrade_level'] > profile_upgrades_dict.get(requirement['reach_upgrade_id'], 0)
-                        or requirement['min_referrals_count'] > 0):
+            for requirement in upgrade.get('requirements', [{}]):
+                # old req check algo, keeping for now
+                # if (requirement['reach_upgrade_level'] > profile_upgrades_dict.get(requirement['reach_upgrade_id'], 0)
+                #         or requirement['min_referrals_count'] > self.referrals_count):
+                if requirement['level'] > profile_upgrades_dict.get(upgrade['id'], 0) + 1:
+                    break
+                if (
+                        requirement.get('reach_upgrade_level', 0) > profile_upgrades_dict.get(
+                    requirement.get('reach_upgrade_id'), 0)
+                        or requirement.get('min_referrals_count', 0) > self.referrals_count
+                        or requirement.get('min_fight_pvp_count', 0) > arena_stats.get('battle_in_the_arena_count', 0)
+                        or requirement.get('min_fight_pve_count', 0) > arena_stats.get('battle_in_the_dungeon_count', 0)
+                        or requirement.get('min_in_rest_count', 0) > arena_stats.get('in_rest_count', 0)
+                        or requirement.get('min_in_planning_count', 0) > arena_stats.get('in_planning_count', 0)
+                        or requirement.get('min_in_rage_count', 0) > arena_stats.get('in_rage_count', 0)
+                        or requirement.get('min_feed_count', 0) > arena_stats.get('feed_count', 0)
+                        or requirement.get('min_chest_bronze_open_count', 0) > arena_stats.get(
+                    'chest_bronze_open_count', 0)
+                        or requirement.get('min_chest_silver_open_count', 0) > arena_stats.get(
+                    'chest_silver_open_count', 0)
+                        or requirement.get('min_chest_gold_open_count', 0) > arena_stats.get('chest_gold_open_count', 0)
+                        or requirement.get('min_durability_repair_count', 0) > arena_stats.get(
+                    'durability_repair_count', 0)
+                        or requirement.get('min_tokens_earned', 0) > arena_stats.get('tokens_earned', 0)
+                        or requirement.get('min_level', 0) > arena_stats.get('level', 0)
+                        or requirement.get('min_rating', 0) > arena_stats.get('rating', 0)
+                        or requirement.get('min_player_item_upgrade_count', 0) > arena_stats.get(
+                    'player_item_upgrade_count', 0)
+                ):
                     can_upgrade = False
                     break
 
@@ -245,17 +280,18 @@ class Tapper:
                 best_efficiency = efficiency
                 best_upgrade_id = upgrade['id']
                 upgrade_title = upgrade['title']
-
+        #         print(f"Effecience: {efficiency} Profit: {profit_relative} Price {price} Title: '{upgrade_title}'")
+        # print('Chose upgrade\n')
+        # exit(0)
         return best_upgrade_id, upgrade_title
 
     async def run(self) -> None:
-        random_delay = random.uniform(1, settings.RANDOM_SESSION_START_DELAY)
+        random_delay = uniform(1, settings.SESSION_START_DELAY)
         logger.info(self.log_message(f"Bot will start in <light-red>{int(random_delay)}s</light-red>"))
         await asyncio.sleep(delay=random_delay)
 
         access_token_created_time = 0
         tg_web_data = None
-        profile = None
 
         proxy_conn = {'connector': ProxyConnector.from_url(self.proxy)} if self.proxy else {}
         async with CloudflareScraper(headers=self.headers, timeout=aiohttp.ClientTimeout(60),
@@ -266,7 +302,7 @@ class Tapper:
                     logger.warning(self.log_message('Failed to connect to proxy server. Sleep 5 minutes.'))
                     await asyncio.sleep(300)
                     continue
-                token_live_time = random.randint(3500, 3600)
+                token_live_time = randint(3500, 3600)
                 try:
                     if time() - access_token_created_time >= token_live_time or not tg_web_data:
                         tg_web_data = await self.get_tg_web_data()
@@ -290,6 +326,10 @@ class Tapper:
                         logger.error(self.log_message(f"Failed to get profile data. Sleep 5 minutes"))
                         await asyncio.sleep(300)
                         continue
+
+                    if not profile.get("is_onboarded", False):
+                        if await self.complete_onboarding(http_client):
+                            logger.info(self.log_message("Successfully completed onboarding"))
 
                     if settings.AUTO_TAP:
                         profile = await self.send_taps(http_client, profile)
@@ -326,6 +366,9 @@ class Tapper:
                         while can_upgrade:
                             profile = await self.get_user_profile(http_client, time_zone)
                             upgrades_list = await self.get_upgrades_list(http_client)
+                            if not profile or not upgrades_list:
+                                break
+                            self.referrals_count = profile.get("referrals_count", 0)
                             balance = profile.get('balance', 0)
                             get_upgrade_id, get_upgrade_title = await self.select_best_upgrade(upgrades_list, balance)
                             if get_upgrade_id:
@@ -338,20 +381,20 @@ class Tapper:
                             else:
                                 can_upgrade = False
 
-                    sleep_time = random.randint(settings.RANDOM_SLEEP_TIME[0], settings.RANDOM_SLEEP_TIME[1])
+                    sleep_time = uniform(settings.RANDOM_SLEEP_TIME[0], settings.RANDOM_SLEEP_TIME[1])
                     logger.info(self.log_message(f"Balance <lc>{int(profile['balance'])}</lc> "
                                                  f"Level <lc>{profile['level']}</lc> "
                                                  f"Profit per hour <lc>{profile['profit_per_hour']}</lc> "
                                                  f"Spins <lc>{profile['lottery_tickets']}</lc>"))
-                    logger.info(self.log_message(f"Completed cycle. waiting {sleep_time} seconds..."))
+                    logger.info(self.log_message(f"Completed cycle. waiting {int(sleep_time)} seconds..."))
                     await asyncio.sleep(delay=sleep_time)
 
                 except InvalidSession as error:
                     raise error
 
                 except Exception as error:
-                    sleep_time = random.randint(60, 120)
-                    log_error(self.log_message(f"Unknown error: {error}. Sleep {sleep_time} seconds"))
+                    sleep_time = uniform(60, 120)
+                    log_error(self.log_message(f"Unknown error: {error}. Sleep {int(sleep_time)} seconds"))
                     await asyncio.sleep(delay=sleep_time)
 
 

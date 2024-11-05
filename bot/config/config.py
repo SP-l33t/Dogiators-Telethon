@@ -10,6 +10,8 @@ class Settings(BaseSettings):
 
     FIX_CERT: bool = False
 
+    TRACK_BOT_UPDATES: bool = True
+
     REF_ID: str = "s5XexnShM18Ftejz"
 
     PERFORM_QUESTS: bool = True
@@ -20,7 +22,7 @@ class Settings(BaseSettings):
 
     RANDOM_SLEEP_TIME: list[int] = [3600, 10800]
 
-    RANDOM_SESSION_START_DELAY: int = 30
+    SESSION_START_DELAY: int = 360
 
     SESSIONS_PER_PROXY: int = 1
     USE_PROXY_FROM_FILE: bool = True

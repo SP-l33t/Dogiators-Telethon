@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     PERFORM_QUESTS: bool = True
     CHANNEL_SUBSCRIBE_TASKS: bool = True
-    UPGRADE_CARDS: bool = False
+    UPGRADE_CARDS: bool = True
     SPIN_THE_WHEEL: bool = True
     AUTO_TAP: bool = True
 

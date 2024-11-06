@@ -213,77 +213,31 @@ class Tapper:
                 return True
         return False
 
-    # TODO Needs fixes after the update
     async def select_best_upgrade(self, json_object, available_money):
         upgrades = json_object.get('system_upgrades', [{}]) + json_object.get('special_upgrades', [{}]) + \
                    json_object.get('arena_upgrades', [{}])
-        arena_stats = json_object.get('arena_stats', {})
-        profile_upgrades = json_object.get('profile_upgrades', [{}])
-
-        # Convert profile upgrades to a dictionary for easy lookup
-        profile_upgrades_dict = {upgrade['upgrade_id']: upgrade['level'] for upgrade in profile_upgrades}
 
         best_upgrade_id = None
         upgrade_title = None
         best_efficiency = 0
 
         for upgrade in upgrades:
-            current_level = profile_upgrades_dict.get(upgrade['id'], 0)
-            if current_level >= upgrade['next_modifier'].get('level'):
-                continue  # No more levels to upgrade
-
-            next_modifier = upgrade['next_modifier']
-            price = next_modifier['price']
-            profit_relative = next_modifier['profit_per_hour_relative']
-
-            if price > available_money:
+            if upgrade.get('status', 'locked').lower() != 'active':
                 continue
 
-            # Check requirements
-            can_upgrade = True
-            for requirement in upgrade.get('requirements', [{}]):
-                # old req check algo, keeping for now
-                # if (requirement['reach_upgrade_level'] > profile_upgrades_dict.get(requirement['reach_upgrade_id'], 0)
-                #         or requirement['min_referrals_count'] > self.referrals_count):
-                if requirement['level'] > profile_upgrades_dict.get(upgrade['id'], 0) + 1:
-                    break
-                if (
-                        requirement.get('reach_upgrade_level', 0) > profile_upgrades_dict.get(
-                    requirement.get('reach_upgrade_id'), 0)
-                        or requirement.get('min_referrals_count', 0) > self.referrals_count
-                        or requirement.get('min_fight_pvp_count', 0) > arena_stats.get('battle_in_the_arena_count', 0)
-                        or requirement.get('min_fight_pve_count', 0) > arena_stats.get('battle_in_the_dungeon_count', 0)
-                        or requirement.get('min_in_rest_count', 0) > arena_stats.get('in_rest_count', 0)
-                        or requirement.get('min_in_planning_count', 0) > arena_stats.get('in_planning_count', 0)
-                        or requirement.get('min_in_rage_count', 0) > arena_stats.get('in_rage_count', 0)
-                        or requirement.get('min_feed_count', 0) > arena_stats.get('feed_count', 0)
-                        or requirement.get('min_chest_bronze_open_count', 0) > arena_stats.get(
-                    'chest_bronze_open_count', 0)
-                        or requirement.get('min_chest_silver_open_count', 0) > arena_stats.get(
-                    'chest_silver_open_count', 0)
-                        or requirement.get('min_chest_gold_open_count', 0) > arena_stats.get('chest_gold_open_count', 0)
-                        or requirement.get('min_durability_repair_count', 0) > arena_stats.get(
-                    'durability_repair_count', 0)
-                        or requirement.get('min_tokens_earned', 0) > arena_stats.get('tokens_earned', 0)
-                        or requirement.get('min_level', 0) > arena_stats.get('level', 0)
-                        or requirement.get('min_rating', 0) > arena_stats.get('rating', 0)
-                        or requirement.get('min_player_item_upgrade_count', 0) > arena_stats.get(
-                    'player_item_upgrade_count', 0)
-                ):
-                    can_upgrade = False
-                    break
+            next_modifier = upgrade.get('next_modifier', {})
+            price = next_modifier.get('price', 2**128)
+            profit_relative = next_modifier.get('profit_per_hour_relative', 0)
 
-            if not can_upgrade:
+            if price > available_money:
                 continue
 
             efficiency = profit_relative / price
             if efficiency > best_efficiency:
                 best_efficiency = efficiency
                 best_upgrade_id = upgrade['id']
-                upgrade_title = upgrade['title']
-        #         print(f"Effecience: {efficiency} Profit: {profit_relative} Price {price} Title: '{upgrade_title}'")
-        # print('Chose upgrade\n')
-        # exit(0)
+                upgrade_title = f"{upgrade['title']} Level: {next_modifier.get('level')}"
+
         return best_upgrade_id, upgrade_title
 
     async def run(self) -> None:
@@ -383,6 +337,7 @@ class Tapper:
                                 else:
                                     can_upgrade = False
                         except KeyError:
+                            log_error(self.log_message("Failed to upgrade a card. Done upgrading."))
                             pass
 
                     sleep_time = uniform(settings.RANDOM_SLEEP_TIME[0], settings.RANDOM_SLEEP_TIME[1])

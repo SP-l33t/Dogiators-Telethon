@@ -41,7 +41,7 @@ async def get_js_hash(path):
             return sha256((await response.text()).encode('utf-8')).hexdigest()
 
 
-async def check_base_url():
+async def check_base_url(press_key=True):
     if settings.TRACK_BOT_UPDATES:
         main_js_formats = await get_main_js_format(appUrl)
         if main_js_formats:
@@ -57,15 +57,19 @@ async def check_base_url():
                 else:
                     logger.error(f"Main JS updated. New file name: <lr>'{js}'</lr>. "
                                  f"Hash: '<lr>{await get_js_hash(js)}</lr>'. Old hash: <lg>{last_actual_hash}</lg>")
+                    if press_key:
+                        input("Press 'Enter' to stop the bot...")
                     sys.exit("Bot updates detected. Contact me to check if it's safe to continue: https://t.me/SP_l33t")
 
         else:
             logger.error("<lr>No main js file found. Can't continue</lr>")
+            if press_key:
+                input("Press 'Enter' to stop the bot...")
             sys.exit("No main js file found. Contact me to check if it's safe to continue: https://t.me/SP_l33t")
 
 
 async def check_bot_update_loop(start_delay: 0):
     await asyncio.sleep(start_delay)
     while settings.TRACK_BOT_UPDATES:
-        await check_base_url()
+        await check_base_url(False)
         await asyncio.sleep(uniform(1500, 2000))

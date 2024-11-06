@@ -213,6 +213,7 @@ class Tapper:
                 return True
         return False
 
+    # TODO Needs fixes after the update
     async def select_best_upgrade(self, json_object, available_money):
         upgrades = json_object.get('system_upgrades', [{}]) + json_object.get('special_upgrades', [{}]) + \
                    json_object.get('arena_upgrades', [{}])
@@ -228,10 +229,10 @@ class Tapper:
 
         for upgrade in upgrades:
             current_level = profile_upgrades_dict.get(upgrade['id'], 0)
-            if current_level >= len(upgrade['modifiers']):
+            if current_level >= upgrade['next_modifier'].get('level'):
                 continue  # No more levels to upgrade
 
-            next_modifier = upgrade['modifiers'][current_level]
+            next_modifier = upgrade['next_modifier']
             price = next_modifier['price']
             profit_relative = next_modifier['profit_per_hour_relative']
 
@@ -362,24 +363,27 @@ class Tapper:
                                 await self.perform_subscribe_quest(http_client, task)
 
                     if settings.UPGRADE_CARDS:
-                        can_upgrade = True
-                        while can_upgrade:
-                            profile = await self.get_user_profile(http_client, time_zone)
-                            upgrades_list = await self.get_upgrades_list(http_client)
-                            if not profile or not upgrades_list:
-                                break
-                            self.referrals_count = profile.get("referrals_count", 0)
-                            balance = profile.get('balance', 0)
-                            get_upgrade_id, get_upgrade_title = await self.select_best_upgrade(upgrades_list, balance)
-                            if get_upgrade_id:
-                                upgrade_result = await self.upgrade_card(http_client, get_upgrade_id)
-                                if upgrade_result:
-                                    logger.success(
-                                        self.log_message(f"Successfully upgraded <lc>{get_upgrade_title}</lc>"))
+                        try:
+                            can_upgrade = True
+                            while can_upgrade:
+                                profile = await self.get_user_profile(http_client, time_zone)
+                                upgrades_list = await self.get_upgrades_list(http_client)
+                                if not profile or not upgrades_list:
+                                    break
+                                self.referrals_count = profile.get("referrals_count", 0)
+                                balance = profile.get('balance', 0)
+                                get_upgrade_id, get_upgrade_title = await self.select_best_upgrade(upgrades_list, balance)
+                                if get_upgrade_id:
+                                    upgrade_result = await self.upgrade_card(http_client, get_upgrade_id)
+                                    if upgrade_result:
+                                        logger.success(
+                                            self.log_message(f"Successfully upgraded <lc>{get_upgrade_title}</lc>"))
+                                    else:
+                                        logger.error(self.log_message(f"Failed to upgrade <lc>{get_upgrade_title}</lc>"))
                                 else:
-                                    logger.error(self.log_message(f"Failed to upgrade <lc>{get_upgrade_title}</lc>"))
-                            else:
-                                can_upgrade = False
+                                    can_upgrade = False
+                        except KeyError:
+                            pass
 
                     sleep_time = uniform(settings.RANDOM_SLEEP_TIME[0], settings.RANDOM_SLEEP_TIME[1])
                     logger.info(self.log_message(f"Balance <lc>{int(profile['balance'])}</lc> "

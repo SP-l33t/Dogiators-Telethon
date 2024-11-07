@@ -222,7 +222,7 @@ class Tapper:
         best_efficiency = 0
 
         for upgrade in upgrades:
-            if upgrade.get('status', 'locked').lower() != 'active':
+            if upgrade.get('status', 'locked').lower() not in ['active', 'inactive']:
                 continue
 
             next_modifier = upgrade.get('next_modifier', {})

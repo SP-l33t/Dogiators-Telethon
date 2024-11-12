@@ -286,10 +286,11 @@ class Tapper:
                         if await self.complete_onboarding(http_client):
                             logger.info(self.log_message("Successfully completed onboarding"))
 
-                    if settings.AUTO_TAP:
-                        profile = await self.send_taps(http_client, profile)
-                        if not profile:
-                            logger.error(self.log_message("Failed to send taps. Sleep 5 minutes"))
+                    # TODO Doesnt work at the moment
+                    # if settings.AUTO_TAP:
+                    #     profile = await self.send_taps(http_client, profile)
+                    #     if not profile:
+                    #         logger.error(self.log_message("Failed to send taps. Sleep 5 minutes"))
 
                     if settings.SPIN_THE_WHEEL:
                         tickets = profile.get('lottery_tickets', 0)

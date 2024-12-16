@@ -13,7 +13,7 @@ from bot.utils.universal_telegram_client import UniversalTelegramClient
 from bot.config import settings
 from bot.utils import logger, log_error, config_utils, CONFIG_PATH, first_run
 from bot.exceptions import InvalidSession
-from .headers import headers, get_sec_ch_ua
+from .headers import *
 
 API_ENDPOINT = "https://tte.dogiators.com/api/v1"
 
@@ -29,7 +29,7 @@ class Tapper:
             logger.critical(self.log_message('CHECK accounts_config.json as it might be corrupted'))
             exit(-1)
 
-        self.headers = headers
+        self.headers = headers.copy()
         user_agent = session_config.get('user_agent')
         self.headers['user-agent'] = user_agent
         self.headers.update(**get_sec_ch_ua(user_agent))
@@ -86,7 +86,8 @@ class Tapper:
 
     async def get_quests(self, http_client: aiohttp.ClientSession):
         await asyncio.sleep(uniform(1, 3))
-        response = await http_client.get(url=f"{API_ENDPOINT}/quests/info?{self.tg_web_data}{self.ref_code}")
+        response = await http_client.get(url=f"{API_ENDPOINT}/quests/info?{self.tg_web_data}{self.ref_code}",
+                                         headers=QUESTS_REFERER)
         if response.status == 200:
             quests_json = await response.json()
             if quests_json.get('status', False):
@@ -107,28 +108,10 @@ class Tapper:
             else:
                 return None
 
-    async def send_taps(self, http_client: aiohttp.ClientSession, profile: dict):
-        await asyncio.sleep(uniform(5, 10))
-        curr_energy = profile.get('cur_energy', 0)
-        profit_per_tap = profile.get('profit_per_tap', 10)
-        taps = int(curr_energy / profit_per_tap * uniform(0.75, 0.85))
-        profit = max(curr_energy - curr_energy % profit_per_tap - randint(1, 20) * 10, 0)
-        response = await http_client.patch(f"{API_ENDPOINT}/profile/update?{self.tg_web_data}{self.ref_code}",
-                                           json={"taps": taps,
-                                                 "profit": profit,
-                                                 "timestamp": int(time())})
-        if response.status == 200:
-            resp_json = await response.json()
-            if resp_json.get('status', False):
-                logger.success(
-                    self.log_message(f"Successfully tapped <lc>{taps}</lc> times and got <lc>{profit}</lc> coins"))
-                return resp_json.get('result', {}).get('profile')
-
-        return None
-
     async def spin_wheel_of_fortune(self, http_client: aiohttp.ClientSession):
         await asyncio.sleep(uniform(2, 5))
-        get_spin_prizes = await http_client.get(url=f"{API_ENDPOINT}/fortune/info?{self.tg_web_data}{self.ref_code}")
+        get_spin_prizes = await http_client.get(url=f"{API_ENDPOINT}/fortune/info?{self.tg_web_data}{self.ref_code}",
+                                                headers=FORTUNE_REFERER)
         if get_spin_prizes.status != 200:
             logger.error(self.log_message(F"Failed to spin the wheel. Code: {get_spin_prizes.status}"))
             return
@@ -151,7 +134,7 @@ class Tapper:
     async def perform_daily_checkin(self, http_client: aiohttp.ClientSession):
         await asyncio.sleep(uniform(2, 5))
         daily_reward = await http_client.post(
-            url=f"{API_ENDPOINT}/quests/daily-reward/claim?{self.tg_web_data}{self.ref_code}")
+            url=f"{API_ENDPOINT}/quests/daily-reward/claim?{self.tg_web_data}{self.ref_code}", headers=QUESTS_REFERER)
         if daily_reward.status == 200 and (await daily_reward.json()).get('status', False):
             return True
 
@@ -171,7 +154,7 @@ class Tapper:
         await asyncio.sleep(uniform(2, 5))
         quest_reward = await http_client.post(
             url=f"{API_ENDPOINT}/quests/subscribe/claim?{self.tg_web_data}{self.ref_code}",
-            json={"type": quest.get('type')})
+            json={"type": quest.get('type')}, headers=QUESTS_REFERER)
         if quest_reward.status == 200:
             reward_json = await quest_reward.json()
             profit = reward_json.get('result', {}).get('profit')
@@ -193,7 +176,8 @@ class Tapper:
 
     async def get_upgrades_list(self, http_client: aiohttp.ClientSession):
         await asyncio.sleep(uniform(2, 5))
-        response = await http_client.get(f"{API_ENDPOINT}/upgrade/list?{self.tg_web_data}{self.ref_code}")
+        response = await http_client.get(f"{API_ENDPOINT}/upgrade/list?{self.tg_web_data}{self.ref_code}",
+                                         headers=UPGRADE_REFERER)
         if response.status in range(200, 300):
             resp_json = await response.json()
             if resp_json.get('status', False):
@@ -206,14 +190,21 @@ class Tapper:
     async def upgrade_card(self, http_client: aiohttp.ClientSession, upgrade_id: int) -> bool:
         await asyncio.sleep(uniform(1, 3))
         response = await http_client.post(f"{API_ENDPOINT}/upgrade/buy?{self.tg_web_data}{self.ref_code}",
-                                          json={"upgrade_id": upgrade_id})
+                                          json={"upgrade_id": upgrade_id}, headers=UPGRADE_REFERER)
         if response.status == 200:
             resp_json = await response.json()
             if resp_json.get('status', False):
                 return True
         return False
 
-    async def select_best_upgrade(self, json_object, available_money):
+    async def fighting_store(self, http_client: aiohttp.ClientSession):
+        resp = await http_client.get(f"{API_ENDPOINT}/fighting/store/info?{self.tg_web_data}{self.ref_code}",
+                                     headers=MARKETPLACE_REFERER)
+        if resp.status in range(200, 300):
+            return (await resp.json()).get('result')
+
+    @staticmethod
+    async def select_best_upgrade(json_object, available_money):
         upgrades = json_object.get('system_upgrades', [{}]) + json_object.get('special_upgrades', [{}]) + \
                    json_object.get('arena_upgrades', [{}])
 
@@ -285,12 +276,6 @@ class Tapper:
                     if not profile.get("is_onboarded", False):
                         if await self.complete_onboarding(http_client):
                             logger.info(self.log_message("Successfully completed onboarding"))
-
-                    # TODO Doesnt work at the moment
-                    # if settings.AUTO_TAP:
-                    #     profile = await self.send_taps(http_client, profile)
-                    #     if not profile:
-                    #         logger.error(self.log_message("Failed to send taps. Sleep 5 minutes"))
 
                     if settings.SPIN_THE_WHEEL:
                         tickets = profile.get('lottery_tickets', 0)

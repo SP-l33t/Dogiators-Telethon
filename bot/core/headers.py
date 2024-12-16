@@ -1,12 +1,17 @@
 import re
 
+QUESTS_REFERER = {'referer': 'https://tte.dogiators.com/quests'}
+FRIENDS_REFERER = {'referer': 'https://tte.dogiators.com/friends'}
+UPGRADE_REFERER = {'referer': 'https://tte.dogiators.com/upgrade'}
+FORTUNE_REFERER = {'referer': 'https://tte.dogiators.com/fortune'}
+MARKETPLACE_REFERER = {'referer': 'https://tte.dogiators.com/marketplace'}
 
 headers = {
     'accept': '*/*',
     'accept-language': 'en-US;q=0.9,en;q=0.8,id;q=0.7',
     'priority': 'u=1, i',
     'origin': 'https://tte.dogiators.com',
-    'referer': 'https://tte.dogiators.com/',
+    'referer': 'https://tte.dogiators.com/?version=1.0.293',
     'sec-ch-ua-mobile': '?1',
     'sec-ch-ua-platform': '"Android"',
     'sec-fetch-dest': 'empty',
